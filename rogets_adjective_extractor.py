@@ -1,29 +1,50 @@
-#requires download of nltk in python
-import os
+"""
+Extract adjectives from a Roget's Thesaurus text file.
+
+This script uses NLTK to tokenize and part-of-speech tag a text file,
+then extracts words tagged as adjectives.
+"""
+
+from pathlib import Path
+
 import nltk
-from nltk.corpus import *
-import string
+
+
+ADJECTIVE_TAGS = {"JJ", "JJR", "JJS"}
+EXCLUDED_WORDS = {"such"}
+
+
+def extract_adjectives(text):
+    """Return adjectives from input text using NLTK POS tags."""
+    tokens = nltk.word_tokenize(text)
+    tagged_tokens = nltk.pos_tag(tokens)
+
+    adjectives = []
+
+    for word, tag in tagged_tokens:
+        if tag in ADJECTIVE_TAGS and word.lower() not in EXCLUDED_WORDS:
+            adjectives.append(word)
+
+    return adjectives
+
 
 def main():
-    file_content = open("/Users/EMWork/Desktop/Boston University/EVL/Adjective Analysis/rog_ads_raw.txt").read()
-    tokens = nltk.word_tokenize(file_content)
-    tagged_corpora = nltk.pos_tag(tokens)
-    update_corpora = ""
+    """Run the Roget's adjective extraction workflow."""
+    input_path = Path(input("Enter input .txt file path: ").strip())
+    output_path = Path(input("Enter output .txt filename: ").strip())
 
-    for i in range(len(tagged_corpora)):
-        if ((('JJ' in tagged_corpora[i]) or ('JJR' in tagged_corpora[i]) or ('JJS' in tagged_corpora[i])) and (('such' not in tagged_corpora[i]) and ('Such' not in tagged_corpora[i]))):
-            update_corpora += str(tagged_corpora[i][0]) + "\n"
+    if not input_path.exists():
+        print("Error: input file does not exist.")
+        return
 
-    f = open(str(input("Enter filename for which you want the data text to be exported (with .txt): \n")), "w")
-    f.write(update_corpora)
+    text = input_path.read_text(encoding="utf-8")
+    adjectives = extract_adjectives(text)
 
-while True:
-    answer = input("Run the Roget's Adjective Extractor program? (y/n): ")
-    if answer not in ('y', 'n'):
-        print("Invalid input.")
-        break
-    if answer == 'y':
-        main()
-    else:
-        print("Goodbye.")
-        break
+    output_path.write_text("\n".join(adjectives), encoding="utf-8")
+
+    print(f"Extracted {len(adjectives)} adjectives.")
+    print(f"Saved results to {output_path}")
+
+
+if __name__ == "__main__":
+    main()
